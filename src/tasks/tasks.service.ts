@@ -1,4 +1,5 @@
-import { UpdateTaskDTO } from './dto/update-task.dto';
+import { GetTasksFilterDTO } from './dto/get-tasks-filter.dto'
+import { UpdateTaskDTO } from './dto/update-task.dto'
 import { CreateTaskDTO } from './dto/create-task.dto'
 import { Task, TaskStatus } from './tasks.model'
 import { Injectable, NotFoundException } from '@nestjs/common'
@@ -8,11 +9,24 @@ import { v4 as uuidv4 } from 'uuid'
 export class TasksService {
   private tasks: Task[] = []
 
-  getAllTasks() {
-    if (!this.tasks) {
-      throw new NotFoundException(`No tasks available`)
-    }
+  getAllTasks(): Task[] {
+    if (!this.tasks) throw new NotFoundException(`No tasks available`)
     return this.tasks
+  }
+
+  getTasksWithFilters(filters: GetTasksFilterDTO): Task[] {
+    const { status, searchTerm } = filters
+    let tasks = this.getAllTasks()
+
+    if (status) tasks = tasks.filter(task => task.status === status)
+    console.log('tasks: ', tasks);
+    if (searchTerm) {
+      tasks = tasks.filter(
+        task => task.title.includes(searchTerm) || task.description.includes(searchTerm),
+      )
+    }
+
+    return tasks
   }
 
   getTaskByUUID(uuid: string): Task {
