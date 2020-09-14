@@ -1,3 +1,4 @@
+import { UpdateTaskDTO } from './dto/update-task.dto';
 import { CreateTaskDTO } from './dto/create-task.dto'
 import { Task, TaskStatus } from './tasks.model'
 import { Injectable, NotFoundException } from '@nestjs/common'
@@ -24,8 +25,8 @@ export class TasksService {
     return found
   }
 
-  createTask(createTaskDTO: CreateTaskDTO): Task {
-    const { title, description } = createTaskDTO
+  createTask(createData: CreateTaskDTO): Task {
+    const { title, description } = createData
     const task: Task = {
       uuid: uuidv4(),
       title,
@@ -34,6 +35,11 @@ export class TasksService {
     }
     this.tasks.push(task)
     return task
+  }
+
+  updateTask(uuid: string, updatedData: UpdateTaskDTO): Task {
+    const task = this.getTaskByUUID(uuid)
+    return Object.assign(task, updatedData)
   }
 
   deleteTask(uuid: string): void {
