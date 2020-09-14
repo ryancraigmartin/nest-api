@@ -18,7 +18,7 @@ export class TasksService {
     const found = this.tasks.find(task => task.uuid === uuid)
 
     if (!found) {
-      throw new NotFoundException(`Task with UUID ${uuid} not found`)
+      throw new NotFoundException(`Task with UUID: ${uuid} not found`)
     }
 
     return found
@@ -34,5 +34,9 @@ export class TasksService {
     }
     this.tasks.push(task)
     return task
+  }
+
+  deleteTask(uuid: string): void {
+    this.tasks = this.tasks.filter(task => task.uuid !== uuid)
   }
 }
