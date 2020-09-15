@@ -21,8 +21,8 @@ export class TasksService {
     if (searchTerm) {
       tasks = tasks.filter(
         task => task.title.includes(searchTerm) || task.description.includes(searchTerm),
-        )
-      }
+      )
+    }
     if (!tasks) throw new NotFoundException(`No tasks were found using filters: ${filters}`)
     return tasks
   }

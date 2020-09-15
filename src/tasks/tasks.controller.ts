@@ -1,3 +1,4 @@
+import { TaskStatusValidationPipe } from './pipes/task-status-validation.pipe'
 import { GetTasksFilterDTO } from './dto/get-tasks-filter.dto'
 import { UpdateTaskDTO } from './dto/update-task.dto'
 import { CreateTaskDTO } from './dto/create-task.dto'
@@ -40,7 +41,10 @@ export class TasksController {
   }
 
   @Patch('/:uuid')
-  updateTask(@Param('uuid') uuid: string, @Body() updateTaskDTO: UpdateTaskDTO): Task {
+  updateTask(
+    @Param('uuid') uuid: string,
+    @Body('status', TaskStatusValidationPipe) updateTaskDTO: UpdateTaskDTO,
+  ): Task {
     return this.tasksService.updateTask(uuid, updateTaskDTO)
   }
 
