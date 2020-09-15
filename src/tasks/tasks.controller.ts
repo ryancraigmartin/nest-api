@@ -3,7 +3,18 @@ import { UpdateTaskDTO } from './dto/update-task.dto'
 import { CreateTaskDTO } from './dto/create-task.dto'
 import { Task } from './tasks.model'
 import { TasksService } from './tasks.service'
-import { Controller, Get, Post, Body, Param, Delete, Patch, Query } from '@nestjs/common'
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Patch,
+  Query,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common'
 
 @Controller('tasks') //? Any routes dealing with tasks will be handled by this controller
 export class TasksController {
@@ -23,6 +34,7 @@ export class TasksController {
   }
 
   @Post()
+  @UsePipes(ValidationPipe)
   createTask(@Body() createTaskDTO: CreateTaskDTO): Task {
     return this.tasksService.createTask(createTaskDTO)
   }

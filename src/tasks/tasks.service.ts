@@ -10,33 +10,27 @@ export class TasksService {
   private tasks: Task[] = []
 
   getAllTasks(): Task[] {
-    if (!this.tasks) throw new NotFoundException(`No tasks available`)
+    if (!this.tasks) throw new NotFoundException(`No tasks were found`)
     return this.tasks
   }
 
   getTasksWithFilters(filters: GetTasksFilterDTO): Task[] {
     const { status, searchTerm } = filters
     let tasks = this.getAllTasks()
-
     if (status) tasks = tasks.filter(task => task.status === status)
-    console.log('tasks: ', tasks);
     if (searchTerm) {
       tasks = tasks.filter(
         task => task.title.includes(searchTerm) || task.description.includes(searchTerm),
-      )
-    }
-
+        )
+      }
+    if (!tasks) throw new NotFoundException(`No tasks were found using filters: ${filters}`)
     return tasks
   }
 
   getTaskByUUID(uuid: string): Task {
-    const found = this.tasks.find(task => task.uuid === uuid)
-
-    if (!found) {
-      throw new NotFoundException(`Task with UUID: ${uuid} not found`)
-    }
-
-    return found
+    const task = this.tasks.find(task => task.uuid === uuid)
+    if (!task) throw new NotFoundException(`Task with UUID: ${uuid} was not found`)
+    return task
   }
 
   createTask(createData: CreateTaskDTO): Task {
@@ -57,6 +51,7 @@ export class TasksService {
   }
 
   deleteTask(uuid: string): void {
-    this.tasks = this.tasks.filter(task => task.uuid !== uuid)
+    const found = this.getTaskByUUID(uuid)
+    this.tasks = this.tasks.filter(task => task.uuid !== found.uuid)
   }
 }
