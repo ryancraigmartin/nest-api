@@ -1,21 +1,21 @@
-import { TaskStatusValidationPipe } from './pipes/task-status-validation.pipe'
-import { GetTasksFilterDTO } from './dto/get-tasks-filter.dto'
-import { UpdateTaskDTO } from './dto/update-task.dto'
-import { CreateTaskDTO } from './dto/create-task.dto'
-import { Task } from './tasks.model'
-import { TasksService } from './tasks.service'
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
   Patch,
+  Post,
   Query,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common'
+import { CreateTaskDTO } from './dto/create-task.dto'
+import { Task } from './task.entity'
+import { TasksService } from './tasks.service'
+import { TaskStatusValidationPipe } from './pipes/task-status-validation.pipe'
+import { UpdateTaskDTO } from './dto/update-task.dto'
+import { GetTasksFilterDTO } from './dto/get-tasks-filter.dto'
 
 @Controller('tasks') //? Any routes dealing with tasks will be handled by this controller
 export class TasksController {
@@ -23,33 +23,32 @@ export class TasksController {
   constructor(private tasksService: TasksService) {}
 
   @Get()
-  getTasks(@Query(ValidationPipe) filters: GetTasksFilterDTO): Task[] {
-    return Object.keys(filters).length
-      ? this.tasksService.getTasksWithFilters(filters)
-      : this.tasksService.getAllTasks()
+  getTasks(@Query(ValidationPipe) filterDTO: GetTasksFilterDTO) {
+    return this.tasksService.getTasks(filterDTO)
   }
-
+s
   @Get('/:uuid')
-  getTaskById(@Param('uuid') uuid: string): Task {
+  getTaskByUUID(@Param('uuid') uuid: string): Promise<Task> {
     return this.tasksService.getTaskByUUID(uuid)
   }
 
   @Post()
   @UsePipes(ValidationPipe)
-  createTask(@Body() createTaskDTO: CreateTaskDTO): Task {
+  createTask(@Body() createTaskDTO: CreateTaskDTO): Promise<Task> {
     return this.tasksService.createTask(createTaskDTO)
   }
 
   @Patch('/:uuid')
   updateTask(
     @Param('uuid') uuid: string,
-    @Body('status', TaskStatusValidationPipe) updateTaskDTO: UpdateTaskDTO,
-  ): Task {
+    @Body(TaskStatusValidationPipe)
+    updateTaskDTO: UpdateTaskDTO,
+  ): Promise<Task> {
     return this.tasksService.updateTask(uuid, updateTaskDTO)
   }
 
   @Delete('/:uuid')
-  deleteTask(@Param('uuid') uuid: string): void {
+  deleteTask(@Param('uuid') uuid: string): Promise<void> {
     return this.tasksService.deleteTask(uuid)
   }
 }

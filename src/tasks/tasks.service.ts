@@ -1,57 +1,49 @@
-import { GetTasksFilterDTO } from './dto/get-tasks-filter.dto'
-import { UpdateTaskDTO } from './dto/update-task.dto'
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
+import { InjectRepository } from '@nestjs/typeorm'
+import { DeleteResult } from 'typeorm'
 import { CreateTaskDTO } from './dto/create-task.dto'
-import { Task, TaskStatus } from './tasks.model'
-import { Injectable, NotFoundException } from '@nestjs/common'
-import { v4 as uuidv4 } from 'uuid'
+import { UpdateTaskDTO } from './dto/update-task.dto'
+import { Task } from './task.entity'
+import { TaskRepository } from './task.repository'
+import { GetTasksFilterDTO } from './dto/get-tasks-filter.dto'
 
 @Injectable() //? Makes it available for injection in other modules.
 export class TasksService {
-  private tasks: Task[] = []
+  constructor(
+    @InjectRepository(TaskRepository)
+    private taskRepository: TaskRepository,
+  ) {}
 
-  getAllTasks(): Task[] {
-    if (!this.tasks) throw new NotFoundException(`No tasks were found`)
-    return this.tasks
+  getTasks(filterDTO: GetTasksFilterDTO): Promise<Task[]> {
+    return this.taskRepository.getTasks(filterDTO)
   }
 
-  getTasksWithFilters(filters: GetTasksFilterDTO): Task[] {
-    const { status, searchTerm } = filters
-    let tasks = this.getAllTasks()
-    if (status) tasks = tasks.filter(task => task.status === status)
-    if (searchTerm) {
-      tasks = tasks.filter(
-        task => task.title.includes(searchTerm) || task.description.includes(searchTerm),
-      )
-    }
-    if (!tasks) throw new NotFoundException(`No tasks were found using filters: ${filters}`)
-    return tasks
-  }
-
-  getTaskByUUID(uuid: string): Task {
-    const task = this.tasks.find(task => task.uuid === uuid)
+  async getTaskByUUID(uuid: string): Promise<Task> {
+    const task = await this.taskRepository.findOne(uuid)
     if (!task) throw new NotFoundException(`Task with UUID: ${uuid} was not found`)
     return task
   }
 
-  createTask(createData: CreateTaskDTO): Task {
-    const { title, description } = createData
-    const task: Task = {
-      uuid: uuidv4(),
-      title,
-      description,
-      status: TaskStatus.OPEN,
-    }
-    this.tasks.push(task)
+  async createTask(createData: CreateTaskDTO): Promise<Task> {
+    const task = await this.taskRepository.createTask(createData)
+    if (!task) throw new InternalServerErrorException(`Error creating ${task}"`)
     return task
   }
 
-  updateTask(uuid: string, updatedData: UpdateTaskDTO): Task {
-    const task = this.getTaskByUUID(uuid)
-    return Object.assign(task, updatedData)
+  async updateTask(uuid: string, updatedData: UpdateTaskDTO): Promise<Task> {
+    const task: Task = await this.getTaskByUUID(uuid)
+    const { title, description, status } = updatedData
+    task.title = title
+    task.description = description
+    task.status = status
+    const result = await task.save()
+    if (!result) throw new InternalServerErrorException(`Error updating ${task}"`)
+    return result
   }
 
-  deleteTask(uuid: string): void {
-    const found = this.getTaskByUUID(uuid)
-    this.tasks = this.tasks.filter(task => task.uuid !== found.uuid)
+  async deleteTask(uuid: string): Promise<void> {
+    const result: DeleteResult = await this.taskRepository.delete(uuid)
+    if (result.affected === 0)
+      throw new NotFoundException(`Task with UUID: "${uuid} was not found"`)
   }
 }

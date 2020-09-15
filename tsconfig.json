@@ -9,6 +9,9 @@
     "target": "es2017",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./"
+    "baseUrl": "./",
+    "lib": [
+      "es5", "es6", "dom", "dom.iterable"
+    ]
   }
 }
